@@ -1,0 +1,6 @@
+[submodule "shorty-backend"]
+	path = shorty-backend
+	url = https://github.com/kalibdune/shorty-backend.git
+[submodule "shorty-frontend"]
+	path = shorty-frontend
+	url = https://github.com/kalibdune/shorty-frontend.git
