@@ -1,0 +1,64 @@
+services:
+  frontend:
+    container_name: shorty_frontend
+    build:
+      context: ./shorty-frontend
+      dockerfile: Dockerfile
+
+    ports:
+      - "80:80"
+    env_file:
+      - ./shorty-frontend/.env
+    depends_on:
+      - backend
+    networks:
+      - shorty-network
+    restart: always
+
+  backend:
+    container_name: shorty_backend
+    build:
+      context: ./shorty-backend
+      dockerfile: Dockerfile
+    command: sh -c "alembic upgrade head && python -m shorty"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    env_file:
+      - ./shorty-backend/.env
+    networks:
+      - shorty-network
+    restart: always
+    volumes:
+      - ./shorty-backend:/app
+      - /app/node_modules
+    depends_on:
+      - db
+
+  db:
+    container_name: shorty_postgres
+    image: postgres:16
+    restart: always
+    volumes:
+      - shorty_db:/var/lib/postgresql/data
+    env_file: .env
+    environment:
+      - POSTGRES_SERVER=${DB_HOST}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "5432:5432"
+    networks:
+      - shorty-network
+
+networks:
+  shorty-network:
+    driver: bridge
+
+volumes:
+  shorty_db:
